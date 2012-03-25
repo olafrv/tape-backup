@@ -319,5 +319,3 @@ ssh-copy-id -i ~/.ssh/id_rsa.pub <servidorderespaldos>
 
 NOTA: Aunque inseguro para mayor comodidad se utiliza el usuario "root".
 
-Ref: http://foros.tsj-dem.gob.ve/viewtopic.php?f=26&t=524&start=0&hilit=ssh
-
