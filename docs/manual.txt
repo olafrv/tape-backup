@@ -1,6 +1,6 @@
 ###
 # ARCHIVO
-#   manual.txt (12 de Enero de 2012)
+#   manual.txt (25 de Marzo de 2012)
 #
 # LICENCIA: 
 #   GNU GPL v3 o posterior (www.fsf.org).
@@ -31,9 +31,10 @@
  1.- ¿Qué es Tape Backup?
 --------------------------
 
-Tape Backup (referido aquí como tape-backup, tape-backup.sh) es un script para 
-BASH shell de Linux diseñado para el respaldo completo (full) de directorios y 
-bases de datos PostgreSQL en una unidad de cinta localmente instalada.
+Tape Backup (referido aquí como tape-backup, tape-backup.sh) es un script hecho 
+en BASH diseñado para realizar respaldo completo (full) de directorios y 
+bases de datos MySQL y PostgreSQL en disco o unidad de cinta local o en un 
+servidor remoto via SSH, FTP o CIFS (SAMBA).
 
 -------------------------------
  2.- Estructura de directorios 
