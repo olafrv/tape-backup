@@ -1,0 +1,9 @@
+#!/bin/sh
+chmod 755 "./user-bin"; chown "olafrv":"olafrv" "./user-bin";
+chmod 664 "./user-bin/LEAME.txt"; chown "olafrv":"olafrv" "./user-bin/LEAME.txt";
+chmod 755 "./docs"; chown "olafrv":"olafrv" "./docs";
+chmod 770 "./docs/licencia.txt"; chown "olafrv":"olafrv" "./docs/licencia.txt";
+chmod 770 "./docs/manual.txt"; chown "olafrv":"olafrv" "./docs/manual.txt";
+chmod 770 "./docs/versiones.txt"; chown "olafrv":"olafrv" "./docs/versiones.txt";
+chmod 755 "./bin"; chown "olafrv":"olafrv" "./bin";
+chmod 770 "./bin/tape-backup.sh"; chown "olafrv":"olafrv" "./bin/tape-backup.sh";

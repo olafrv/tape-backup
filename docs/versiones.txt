@@ -1,0 +1,169 @@
+###
+# ARCHIVO:
+#   versiones.txt
+#
+# LICENCIA: 
+#   GNU GPL v3 o posterior (www.fsf.org).
+#
+# AUTOR:
+#   Olaf Reitmaier Veracierta (olafrv@gmail.com).
+#
+# USO:
+#   Histórico de modificaciones
+##
+
+--------------------------------------------------------------------
+ CAMBIE LAS VERSIONES DE LOS ARCHIVOS MODIFICADOS CUANDO AGREGUE LA 
+ DESCRIPCION DE DICHOS CAMBIOS EN ESTE ARCHIVO !!!
+--------------------------------------------------------------------
+
+Última versión:
+
+	 - Modificado el 13 de Marzo de 2012 por Olaf Reitmaier (olafrv@gmail.com).
+     Correcion de error de respaldo de base de datos PostgreSQL por falta de
+     opción -d en pg_dump 8.4, sería sustituída por --inserts pero esta 
+     opción ralentiza la restauración de base de datos, la opción -d fue
+     incluída erróneamente para seleccionar una base de datos específica.
+
+	 - Modificado el 12 de Marzo de 2012 por Olaf Reitmaier (olafrv@gmail.com).
+     Correcion de error al momento de lista base de datos MySQL agregando
+     el parametro --protocol=TCP a mysqldump.
+
+	 - Modificado el 23 de Febrero de 2012 por Olaf Reitmaier (olafrv@gmail.com).
+     Agregada opcion para mostrar el tamaño del archivo de respaldo y para
+     mostrar el tiempo de duración de los comandos (no de las funciones).
+
+	 - Modificado el 12 de Enero de 2012 por Olaf Reitmaier (olafrv@gmail.com).
+     Se agregó la opción de respaldo "filesc" que pasa el parametro --ignore-failed-read
+		 para que se pueda realizar respaldo de archivos en caliente sin generar errores,
+     hay que tener cuidado con esta opción porque puede omitir archivos que deben
+     ser respaldados en caso de que no los pueda leer, por ejemplo, por falta de permisos.
+
+	 - Modificado el 11 de Enero de 2012 por Olaf Reitmaier (olafrv@gmail.com).
+     Fue cambiada la forma en que se enumeran las bases de datos de PostgreSQL,
+     cuando se realiza un respaldo de todas ellas (all), debido a un error en 
+     la expresion regular de grep sustituyendo \s por [[:space:]].
+
+	 - Modificado el 07 de Diciembre de 2011 por Olaf Reitmaier (olafrv@gmail.com).
+     Fue cambiada la forma en que se enumeran las bases de datos de PostgreSQL,
+     cuando se realiza un respaldo de todas ellas (all).
+
+   - Modificado el 26 de Septiembre de 2011 por Olaf Reitmaier (olafrv@gmail.com).
+     Añadido parámetro en mysqldump para exportar las rutinas (procedimientos
+     almacenados y funciones) de las base de datos.
+ 
+   - Modificado el 16 de Enero de 2011 por Olaf Reitmaier (olafrv@gmail.com).
+     Restaurada la funcionalidad de compresion de archivos con GZIP, se comprobo
+     que los problemas eran por lentitud de la SAN y congestion del servicio
+     NFS a donde se crean 'on the fly' los archivos GZ. Agregada funcionalidad
+     de copia de archivos a través de scp (SSH sin contraseña, ver manual).
+ 
+   - Modificado el 26 de Enero de 2011 por Olaf Reitmaier (olafrv@gmail.com).
+     Eliminada la compresion de archivos SQL porque archivos comprimidos muy
+     grandes (>=6GB) se corrompen a traves de NFS o bien durante la compresión.
+
+   - Modificado el 13 de Octubre de 2010 por Olaf Reitmaier (olafrv@gmail.com).
+     Corregido error cuando la particion temporal de respaldo (/var/) es parte
+     de otra partición (/).
+   
+   - Modificado el 23 de Agosto de 2010 por Olaf Reitmaier (olafrv@gmail.com).
+     Añadido soporte para respaldar base de datos OpenLDAP.
+  
+   - Modificado el 21 de Agosto de 2009 por Olaf Reitmaier (olafrv@gmail.com).
+     Añadido soporte para especificación del grupo de trabajo al guardar
+     archivos en una caperta compartida de Window o SAMBA.
+
+   - Modificado el 31 de Julio de 2009 por Olaf Reitmaier (olafrv@gmail.com).
+     Añadido soporte para colocar archivos en subcarpetas de los recursos
+     compartidos por samba (las ruta debe estar creada previamente).
+
+   - Modificado el 12 de Junio de 2009 por Olaf Reitmaier (olafrv@gmail.com).
+     Ahora se utiliza el paquete sendemail que habilita el comando sendEmail,
+     con el cual, se pueden enviar correos sin necesidad de un demonio
+     sendmail en la máquina, adicionalmente también se puede realizar envio
+     de correos con autenticación, entre otros.  Añadido soporte MySQL!!! 
+
+   - Modificado el 05 de Junio de 2009 por Olaf Reitmaier (olafrv@gmail.com).
+     Agregado soporte para exportar los usuarios/grupos (roles) de PostgreSQL
+     utilizando pg_dumpall, algo que denominamos metadatos.
+
+   - Modificado el 18 de Febrero de 2009 por Olaf Reitmaier (olafrv@gmail.com).
+     Agregada compatibilidad con POSIX mediante "df -P" en la rutina
+     de cálculo de espacio libre en disco.  Tambien se realizo un downgrade
+     de la utilizacion de pg_dumpall hacia pg_dump debido a que es mejor
+     mantener las base de datos separadas. Se creo una restriccion en la 
+     rutina de dump de las base de datos para que no se exportaran las
+     base de datos template0 y template1 de postgresql.
+
+   - Modificado el 03 de Noviembre de 2008 por Olaf Reitmaier (olafrv@gmail.com).
+     Modificada la implementación de la verificación de espacio libre debido a un
+     error que se generaba cuando existían particiones de tipo LVM.
+
+   - Modificado el 23 de Septiembre de 2008 por Olaf Reitmaier (olafrv@gmail.com).
+     Modificada la implementación del respaldo de todas las bases de datos con la
+     opción all, se sustituyó la instrucción pg_dump por pg_dumpall. Actualización 
+     del manual en el script de ejemplo y una nueva sección sobre "/etc/crontab".
+
+   - Modificado el 14 de Julio de 2008 por Olaf Reitmaier (olafrv@gmail.com).
+     Eliminada la variable EJECT. Actualización de los ejemplos del manual.
+
+   - Modificado el 11 de Julio de 2008 por Olaf Reitmaier (olafrv@gmail.com),
+     se habilito el envio de archivo a través de smbclient (SAMBA) a un
+     servidor en una carpeta específica, siempre y cuando este activada 
+     la variable CP_TO_SMB=1.
+
+   - Modificado el 1 de Julio de 2008 por Olaf Reitmaier (olafrv@gmail.com),
+     se actualizó la forma como se crea el archivo de log, simplificando
+     la configuración en crontab, añadiendo dos parámetros (renlog y email)
+     al script tape-backup.sh y utilizando el comando "exec" para 
+     redireccionar la salida y errores en pantalla de dicho script.
+
+   - Modificado el 30 de Junio de 2008 por Olaf Reitmaier (olafrv@gmail.com),
+     agregado envío de correo electrónico con último log, y eliminación
+     del script ren-log.sh e incorporado en el script tape-backup.sh.
+
+   - Modificado el 17 de Junio de 2008 por Olaf Reitmaier (olafrv@gmail.com),
+     agregado parametro para habilitar/deshabilitar la copia de los respaldos
+     hechos en disco hacia la unidad de cinta.
+
+   - Modificado el 27 de Marzo de 2008 (A) Olaf Reitmaier (olafrv@gmail.com),
+     durante la verificacion de espacio en disco se muestra el error, pero
+     no se aborta las operaciones.
+
+   - Modificado el 27 de Marzo de 2008 por Olaf Reitmaier (olafrv@gmail.com),
+     se ha agregado un script para cambiar el nombre del archivo de respaldo
+     'ren-log.sh'. Ajustes en el manual.
+
+   - Modificado el 26 de Marzo de 2008 por Olaf Reitmaier (olafrv@gmail.com),
+     soporte para notificacion por pantalla sobre errores ocurridos, atrapando
+     el código de error de salida del comando 'mt', 'tar', 'gzip', entre otros.
+
+   - Modificado el 24 de Marzo de 2008 por Olaf Reitmaier (olafrv@gmail.com),
+     correción de un error en la función clt_cinta en la función "restaurar",
+     la cual, tenía un parámetro sobrante al final, y además, se requería
+     cambiar el directorio de restauración manualmente. Verificacion de las 
+     operaciones 'siguiente', 'anterior', 'final'.
+
+   - Modificado el 17 de Marzo de 2008 por Olaf Reitmaier (olafrv@gmail.com),
+     etiqueta para respaldos de archivos, comentario de problemas con 
+     comandos de movimiento de cinta de forma manual (posicion, anterior,
+     siguiente, final).  
+ 
+   - Modificado el 13 de Marzo de 2008 por Olaf Reitmaier (olafrv@gmail.com),
+     inclusion de comandos para la manipulacion de la unidad de cinta.
+
+   - Modificado el 12 de Marzo de 2008 por Olaf Reitmaier (olafrv@gmail.com),
+     para incluir soporte para el respaldo de bases de datos del servidor
+     PostgreSQL.
+
+   - Creado el 12 de Marzo de 2008 por Olaf Reitmaier (olafrv@gmail.com),
+     basado en el script de Chad Amberg (chad@bluestream.org) ubicado en
+     http://www.bluestream.org/Networking/TapeBackups.htm, mejorado y
+     adaptado para tener más y mejores parametros de configuración,
+     incluyendo el respaldo en disco previo al respaldo en cinta.
+
+   - El script de Chad Amber está basado en el script de Daniel 
+     O'Callaghan (danny@freebsd.org), pero fue modificado también por
+     Gerhard Mourani (gmourani@videotron.ca) y por Chad Amberg 
+     (chad@bluestream.org) para su uso en cinta. 
+

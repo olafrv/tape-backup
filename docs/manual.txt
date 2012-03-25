@@ -1,0 +1,322 @@
+###
+# ARCHIVO
+#   manual.txt (12 de Enero de 2012)
+#
+# LICENCIA: 
+#   GNU GPL v3 o posterior (www.fsf.org).
+#
+# AUTOR:
+#   Olaf Reitmaier Veracierta (olafrv@gmail.com).
+#
+# USO:
+#   Descripcion breve del uso y desarrollo tape-backup.sh
+##
+
+--------
+ Índice
+--------
+
+ 1.- ¿Qué es Tape Backup?
+ 2.- Estructura de directorios
+ 3.- Acceso directo al comando
+ 4.- Programando los respaldos con el demonio 'cron'
+ 5.- Configuración
+ 6.- Instrucciones de uso
+ 7.- Hacking Tape Backup
+ 8.- Programación de Respaldos 
+ 9.- Ejemplo de un Script de Respaldo
+10.- SSH sin contraseña
+
+--------------------------
+ 1.- ¿Qué es Tape Backup?
+--------------------------
+
+Tape Backup (referido aquí como tape-backup, tape-backup.sh) es un script para 
+BASH shell de Linux diseñado para el respaldo completo (full) de directorios y 
+bases de datos PostgreSQL en una unidad de cinta localmente instalada.
+
+-------------------------------
+ 2.- Estructura de directorios 
+-------------------------------
+ 
+../respaldo
+  |_respaldos
+  |_restaurados
+
+../bin
+  |_ tape-backup.sh
+    >> El script principal de tape-backup
+../user-bin
+  |_ . 
+     >> Sus scripts de respaldo van aqui, 
+        por ejemplo, 'mi-script.sh'
+
+../docs
+  |_ versiones.txt
+     >> Histórico de modificaciones por version
+
+  |_ licencia.txt 
+     >> Licencia GNU/GPL bajo la cual esta tape-backup
+
+
+-------------------------------
+ 3.- Acceso directo al comando 
+-------------------------------
+
+Puede crear un acceso directo al comando tape-backup con la siguiente instrucción:
+
+ln -s /opt/tape-backup/bin/tape-backup.sh /usr/bin/tape-backup.sh
+
+Luego, en la cónsola escriba tape y presione TAB.
+
+
+-----------------------------------------------------
+ 4.- Programando los respaldos con el demonio 'cron'
+-----------------------------------------------------
+
+Para crear respaldos programados basta con colocar líneas
+parecidas a estas:
+
+# m h  dom mon dow   command
+
+# Mi respaldo
+0 12 * * 1-5 /var/opt/tape-backup/user-bin/mi-respaldo.sh
+
+
+-------------------
+ 5.- Configuración
+-------------------
+
+En el archivo tape-backup.sh se encuentra una sección de configuración 
+que permite cambiar los siguientes parametros, esta identificada con el 
+siguiente encabezado.
+
+###
+# SECCION DE CONFIGURACION
+#
+# Cambie las variables de esta sección
+# para ajustarla a la forma de backup
+##
+
+Remítase a ella para mayor información.
+
+
+--------------------------
+ 6.- Instrucciones de uso 
+--------------------------
+
+INSTRUCCIONES GENERALES
+
+Para la operación manual o respaldo local a disco:
+
+   De archivos:
+
+      tape-backup.sh files cualquier_archivo_directorio etiqueta
+
+	 De archivos ignorando aquellos con los que se presenten problemas
+   de lectura, por ejemplo, modificados durante el respaldo, movidos 
+   o sin permisos para leerlos:
+	
+      tape-backup.sh filesc cualquier_archivo_directorio etiqueta
+
+   De bases de datos PostgreSQL
+
+      tape-backup.sh pgsql version/cluster base_de_datos etiqueta
+      tape-backup.sh pgsql version/cluster all etiqueta
+
+  De bases de datos PostgreSQL por tablas:
+
+      tape-backup pgsqlt version/cluster base_de_datos etiqueta
+      tape-backup pgsqlt version/cluster all etiqueta
+
+  De todas las base de datos PostgreSQL menos las base de datos bd1 y bd2:
+
+      tape-backup pgsqlt version/cluster all:bd1,bd2 etiqueta
+
+  De metadatos del manejador de base de datos PostgreSQL:
+
+      tape-backup.sh pgmeta servidor puerto usuario contraseña etiqueta
+  
+  De bases de datos MySQL (incluyendo metadatos):
+
+      tape-backup.sh mysql servidor puerto usuario contraseña base_de_datos etiqueta
+      tape-backup.sh mysql servidor puerto usuario contraseña all etiqueta
+
+  De base de datos OpenLDAP (en formato LDIF) comprimido (GZIP):
+
+      tape-backup.sh ldap etiqueta 
+
+Para renombrar el archivo de log (evitar sobreescritura):
+
+   tape-backup.sh renlog
+
+Para enviar el archivo de log por correo electrónico (y limpiarlo):
+
+   tape-backup.sh email etiqueta
+
+Para la operación manual de la unidad de la cinta (incluyendo restauracion o respaldo):
+
+   tape-backup.sh tape [ estado | anterior | siguiente | listar | borrar | restaurar | regresar | expulsar ]
+
+Ninguna operacion retrocede la cinta a la posicion (sesion) previa a la ejecucion de la misma, por lo tanto, debe utilizarse anterior o para ir al archivo anterior.
+
+Los modos (MODE) de copia de los archivos de respaldos del directorio donde se crean (TMP_DIR) al directorio de destino (local o remoto) pueden ser:
+
+- cp (Copia de archivos a un directorio, puede ser local o una particion nfs montada).
+- scp (Copia de archivos a un servidor SSH utilizando el comando SCP).
+- smb (Copia de archivos a un servidor SAMBA/Windows utilizando el comando smbclient.
+- tape (Copia de archivo a una cinta de respaldo magnetica en una unidad de cinta).
+
+Para poder subir los archivos a una carpeta compartida por SAMBA (o Windows) se deben agregar los siguientes parametros al comando de respaldo:
+
+- Servidor SAMBA/Windows.
+- Carpeta Compartida.
+- Usuario.
+- Contraseña.
+- Grupo de Trabajo.
+
+Para poder subir los archivos a una carpeta en un servidor SSH via scp se debe agregar los siguientes parametros al comando de respaldos:
+
+- Servidor SSH.
+- Ruta a la carpeta de destino.
+- Usuario (Opcional, se toma por defecto el usuario que ejecuta el script).
+
+Para poder copiar los archivos a otro directorio (cp) se debe el siguiente parametro:
+
+- Directorio de destino.
+
+-------------------------
+ 7.- Hacking Tape Backup
+-------------------------
+
+Si usted es un usuario avanzado o desarrollador revise el manual 'man' o busque
+en Google información de los siguientes comandos:
+
+- mt (Manejo de la unidad de cinta)
+- tar (Copia y extración de archivos de la cinta)
+- gzip (Comprimir los archivos)
+- awk, grep (Manipulacion de expresiones)
+- psql, pg_dump, pg_dumpall (Manipulacion con el servidor PostgreSQL de base de datos)
+- mysql, mysqldump (Manipulacion con el servidor MySQL de base de datos)
+- smbclient (Envio de archivo a carpetas compartidas de Windows o SAMBA)
+- cron, crond, crontab (Programación de respaldos automáticos)
+- sendEmail (Envio de correo electrónico)
+- bash (Manipulacion de comandos internos del sistema y lenguaje de programacion de tape-backup.sh)
+- scp (OpenSSH permite copiar archivos entre maquina con el comando scp).
+
+-------------------------------
+ 8.- Programación de respaldos
+-------------------------------
+
+Edite el archivo /etc/crontab (debe tener instalado el demonio cron), agregue las 
+siguientes líneas al final del archivo:
+
+# Respaldo de la base de datos (De Lunes - Viernes a 12:30 PM)
+30 12 * * 1-5   root    /var/opt/tape-backup/user-bin/ejemplo.sh
+
+Esto funcionará siempre y cuando:
+  - La carpeta de instalación de tape-backup es /var/opt/tape-backup
+  - Toda la carpeta /tape-backup tiene permisos 700
+  - El dueño y el grupo de la carpeta es el usuario/grupo "root"
+
+
+--------------------------------------
+ 9.- Ejemplo de un Script de Respaldo
+--------------------------------------
+
+###
+# ARCHIVO:
+#   ejemplo.sh 
+#
+# LICENCIA: 
+#   GNU GPL v3 o posterior (www.fsf.org).
+#
+# AUTOR:
+#   Olaf Reitmaier Veracierta (olafrv@gmail.com).
+#
+# USO:
+#   Ejemplo de un respaldo (Colocar en user-bin/).
+##
+
+# ATAJO AL COMANDO
+TB=/var/opt/tape-backup/bin/tape-backup.sh
+
+# MODO DE COPIA DE ARCHIVOS (tape, scp (Por defecto), smb, cp)
+MODE=tape
+
+# IMPRIMIR ESTADO DE LA CINTA (Opcional)
+$TB tape estado
+
+# REGRESAR LA CINTA
+$TB tape regresar
+
+# SESION 1° (Respaldo de la base de datos bd001 y copia en cinta)
+$TB pgsql localhost 8.3/main bd001 respaldo_bd001
+
+# SESION 2° (Respaldo del directorio /etc y copia en cinta)
+$TB files /etc mi_respaldo_de_etc
+
+# SESION 3° (Respaldo del directorio de tape-backup y copia en cinta)
+$TB files /var/opt/tape-backup mi_respaldo_de_tbk
+
+# SESION 4° (Respaldo de la base de datos bd002, copia en la
+#            carpeta compartida "publico" del servidor Windows/Samba 
+#            "tolonda" como el usuario "karla" del dominio "workgroup")
+export MODE=smb
+$TB pgsql 8.3/main bd002 respaldo_bd002 tolondra publico karla 1234krla workgroup
+
+# SESION 5° (Respaldo de los metadatos: usuarios, grupos, roles del manejador de base de datos)
+export MODE=scp
+$TB pgmeta 8.3/main all metadatos 192.168.1.22 /respaldos
+
+# SESION 6° (Respaldo de todas las bases de datos PostgreSQL incluyendo los datos, el esquema y los metadatos)
+export MODE=cp
+for version in `ls /etc/postgresql`
+do
+        for cluster in `ls /etc/postgresql/$version`
+        do
+                $TB pgsql $version/$cluster all ${HOSTNAME}_pg_bd /tmp
+                $TB pgmeta $version/$cluster all ${HOSTNAME}_pgmeta /tmp
+        done
+done
+
+# SESION 6° (Respaldo de todas las bases de datos PostgreSQL incluyendo los datos, el esquema y los metadatos)
+
+
+# SESION 8º (Respaldo de las base de datos de MySQL)
+export MODE=tape
+$TB mysql 127.0.0.1 3307 root 123456 all ${HOSTNAME}_mysql 
+
+# SESION 9º (Respaldo del directorio OpenLDAP)
+$TB ldap bdldap
+
+# EXPULSAR LA CINTA
+$TB tape expulsar
+
+# ENVIAR REPORTE POR EMAIL
+$TB email "$HOSTNAME - Reporte de Mi Respaldo - bd001 y bd002"
+
+# RENOMBRAR LOG (NO OLVIDAR ESTO)
+$TB renlog
+
+
+--------------------------
+ 10.- SSH sin contraseña 
+--------------------------
+
+Creación de llaves públicas de tipo rsa 
+
+En el servidor donde se ejecuta tape-backup y como el usuario que lo ejecuta:
+
+ssh-keygen -t rsa
+
+NOTA: No introducir ningun passphrase,  el archivo de la clave pública se genera en ~/.ssh/id_rsa.pub.
+
+Copiar la clave generada
+
+ssh-copy-id -i ~/.ssh/id_rsa.pub <servidorderespaldos>
+
+NOTA: Aunque inseguro para mayor comodidad se utiliza el usuario "root".
+
+Ref: http://foros.tsj-dem.gob.ve/viewtopic.php?f=26&t=524&start=0&hilit=ssh
+
