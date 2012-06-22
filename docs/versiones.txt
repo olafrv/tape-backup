@@ -19,6 +19,10 @@
 
 Última versión:
 
+   - Modificado el 21 de Junio de 2012 por Olaf Reitmaier (olafr@gmail.com).
+     Agregada funcionado de respaldos de bases de datos PostgreSQL como
+     un usuarios distinto de "postgres".
+
 	 - Modificado el 13 de Marzo de 2012 por Olaf Reitmaier (olafrv@gmail.com).
      Correcion de error de respaldo de base de datos PostgreSQL por falta de
      opción -d en pg_dump 8.4, sería sustituída por --inserts pero esta 
