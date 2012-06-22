@@ -1,6 +1,6 @@
 ###
 # ARCHIVO
-#   manual.txt (25 de Marzo de 2012)
+#   manual.txt (21 de Junio de 2012)
 #
 # LICENCIA: 
 #   GNU GPL v3 o posterior (www.fsf.org).
@@ -31,10 +31,9 @@
  1.- ¿Qué es Tape Backup?
 --------------------------
 
-Tape Backup (referido aquí como tape-backup, tape-backup.sh) es un script hecho 
-en BASH diseñado para realizar respaldo completo (full) de directorios y 
-bases de datos MySQL y PostgreSQL en disco o unidad de cinta local o en un 
-servidor remoto via SSH, FTP o CIFS (SAMBA).
+Tape Backup (referido aquí como tape-backup, tape-backup.sh) es un script para 
+BASH shell de Linux diseñado para el respaldo completo (full) de directorios y 
+bases de datos PostgreSQL en una unidad de cinta localmente instalada.
 
 -------------------------------
  2.- Estructura de directorios 
@@ -110,7 +109,7 @@ INSTRUCCIONES GENERALES
 
 Para la operación manual o respaldo local a disco:
 
-   De archivos:
+De archivos:
 
       tape-backup.sh files cualquier_archivo_directorio etiqueta
 
@@ -120,32 +119,51 @@ Para la operación manual o respaldo local a disco:
 	
       tape-backup.sh filesc cualquier_archivo_directorio etiqueta
 
-   De bases de datos PostgreSQL
+De base de datos PostgreSQL:
+
+   De una o todas (all) las bases de datos conectándose como el 
+   usuario "postgres":
 
       tape-backup.sh pgsql version/cluster base_de_datos etiqueta
       tape-backup.sh pgsql version/cluster all etiqueta
 
-  De bases de datos PostgreSQL por tablas:
+ 	 De una o todas (all) las bases de datos por tablas conectándose 
+   como el usuario "postgres":
 
-      tape-backup pgsqlt version/cluster base_de_datos etiqueta
-      tape-backup pgsqlt version/cluster all etiqueta
+      tape-backup.sh pgsqlt version/cluster base_de_datos etiqueta
+      tape-backup.sh pgsqlt version/cluster all etiqueta
 
-  De todas las base de datos PostgreSQL menos las base de datos bd1 y bd2:
+   De todas las base de datos excepto las base de datos bd1 y bd2 
+   conectándose como el usuario "postgres":
 
-      tape-backup pgsqlt version/cluster all:bd1,bd2 etiqueta
+      tape-backup.sh pgsqlt version/cluster all:bd1,bd2 etiqueta
+ 
+   De metadatos del manejador de base de datos conectándose como
+   el usuario "postgres":
 
-  De metadatos del manejador de base de datos PostgreSQL:
+      tape-backup.sh pgmeta version/cluster base_de_datos etiqueta
+      tape-backup.sh pgmeta version/cluster all etiqueta
+   
+   Todas las opciones anteriores para PostgreSQL pueden realizarse como 
+   otro usuario cuyos datos de conexión estén definidos en el archivo
+   ~/.pgpass o el indicado por $PGPASSFILE:
 
-      tape-backup.sh pgmeta servidor puerto usuario contraseña etiqueta
-  
-  De bases de datos MySQL (incluyendo metadatos):
+      tape-backup.sh pgsql version/cluster/usuario base_de_datos etiqueta
+      tape-backup.sh pgsql version/cluster/usuario all etiqueta
+      tape-backup.sh pgsqlt version/cluster/usuario base_de_datos etiqueta
+      tape-backup.sh pgsqlt version/cluster/usuario all etiqueta
+      tape-backup.sh pgsqlt version/cluster/usuario all:bd1,bd2 etiqueta
+      tape-backup.sh pgmeta version/cluster/usuario base_de_datos etiqueta
+      tape-backup.sh pgmeta version/cluster/usuario all etiqueta
+ 
+De bases de datos MySQL (incluyendo metadatos):
 
-      tape-backup.sh mysql servidor puerto usuario contraseña base_de_datos etiqueta
-      tape-backup.sh mysql servidor puerto usuario contraseña all etiqueta
+   tape-backup.sh mysql servidor puerto usuario contraseña base_de_datos etiqueta
+   tape-backup.sh mysql servidor puerto usuario contraseña all etiqueta
 
-  De base de datos OpenLDAP (en formato LDIF) comprimido (GZIP):
+De base de datos OpenLDAP (en formato LDIF) comprimido (GZIP):
 
-      tape-backup.sh ldap etiqueta 
+   tape-backup.sh ldap etiqueta 
 
 Para renombrar el archivo de log (evitar sobreescritura):
 
@@ -281,8 +299,19 @@ do
         done
 done
 
-# SESION 6° (Respaldo de todas las bases de datos PostgreSQL incluyendo los datos, el esquema y los metadatos)
-
+# SESION 7° (Respaldo de todas las bases de datos PostgreSQL incluyendo los datos, 
+# el esquema y los metadatos como el usuario "backup" cuyos datos están en el 
+# archivo en formato .pgpass en la ruta /root/backups.pgpass)
+export PGPASSFILE=/root/backup.pgpass
+export MODE=cp
+for version in `ls /etc/postgresql`
+do
+  for cluster in `ls /etc/postgresql/$version`
+  do
+    $TB pgsql $version/$cluster/backup all ${HOSTNAME}_pg_bd /tmp
+    $TB pgmeta $version/$cluster/backup all ${HOSTNAME}_pgmeta /tmp
+  done
+done
 
 # SESION 8º (Respaldo de las base de datos de MySQL)
 export MODE=tape
@@ -301,21 +330,28 @@ $TB email "$HOSTNAME - Reporte de Mi Respaldo - bd001 y bd002"
 $TB renlog
 
 
---------------------------
+-------------------------
  10.- SSH sin contraseña 
---------------------------
+-------------------------
 
-Creación de llaves públicas de tipo rsa 
+SSH sin contraseña = Conexión con llaves públicas de tipo RSA. 
 
-En el servidor donde se ejecuta tape-backup y como el usuario que lo ejecuta:
+ADVERTENCIA: Todos los comandos deben ser ejecutados como el que ejecuta tape-backup.
+
+En el cliente donde se ejecuta tape-backup:
 
 ssh-keygen -t rsa
 
-NOTA: No introducir ningun passphrase,  el archivo de la clave pública se genera en ~/.ssh/id_rsa.pub.
+ADVERTENCIA: No introducir ningun passphrase.
 
-Copiar la clave generada
+El archivo de la clave pública se genera en ~/.ssh/id_rsa.pub, ahora 
+se debe copiar la clave generada desde el cliente al servidor de respaldos:
 
 ssh-copy-id -i ~/.ssh/id_rsa.pub <servidorderespaldos>
 
-NOTA: Aunque inseguro para mayor comodidad se utiliza el usuario "root".
+ADVERTENCIA: Aunque inseguro para mayor comodidad se utiliza el usuario "root".
+
+Finalmente, ahora no se nos pedirá contraseña al ejecutar:
+
+ssh <servidorderespaldos>
 

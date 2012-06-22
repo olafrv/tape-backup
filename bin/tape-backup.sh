@@ -2,7 +2,7 @@
 
 ###
 # ARCHIVO:
-#   tape-backup.sh (23 de Febrero de 2011)
+#   tape-backup.sh (20 de Junio de 2012)
 #
 # LICENCIA:
 #   GNU GPL v3 o posterior (www.fsf.org).
@@ -24,7 +24,7 @@
 ##
 
 # Version
-VERSION="13032012"
+VERSION="20062012"
 
 # Email del responsable de los respaldos
 # (Para que funcione debe tener instalado
@@ -515,9 +515,18 @@ then
 
 	if [ `echo $SRC_CLUSTER | grep \. | wc -l` -eq 1 ]
 	then
-	   pgversion=`echo $SRC_CLUSTER|cut -d"/" -f1`
-	   pgcluster=`echo $SRC_CLUSTER|cut -d"/" -f2`
-	   SRC_PORT=`pg_lsclusters | grep "$pgversion" | grep "$pgcluster" | awk '{print $3}'`
+	  pgversion=`echo $SRC_CLUSTER|cut -d"/" -f1`
+	  pgcluster=`echo $SRC_CLUSTER|cut -d"/" -f2`
+	  pguser=`echo $SRC_CLUSTER|cut -d"/" -f3`
+		if [ ! -z $pguser ] && [ ! -e $PGPASSFILE ] && [ ! -e ~/.pgpass ]
+		then
+		  echo "***** Se ha especificado un usuario pero no existen los archivos "
+		  echo "***** definidos por la variable \$PGPASSFILE ni '~/.pgpass'."
+			echo ">> "`date $DATE_FORMAT`
+			echo "**** ERROR ****"; 
+			let ERRORES++;
+		fi
+	  SRC_PORT=`pg_lsclusters | grep "$pgversion" | grep "$pgcluster" | awk '{print $3}'`
 	fi
 
 	FILE_ROOT="${TMP_DIR}/${DST_FILES_ROOT}_${LABEL}_${pgversion}_${pgcluster}"
@@ -572,7 +581,13 @@ then
 
 				FILE="${FILE_ROOT}_${BD}_pgschema.sql.gz"
 
-				$TIME su - postgres -c "export PGCLUSTER=$pgversion/$pgcluster; $PGDUMP -p $SRC_PORT -s $BD" | $GZIP - > $FILE
+				if [ -z $pguser ]
+				then
+					$TIME su - postgres -c "export PGCLUSTER=$pgversion/$pgcluster; $PGDUMP -p $SRC_PORT -s $BD" | $GZIP - > $FILE
+				else
+					export PGCLUSTER=$pgversion/$pgcluster
+					$TIME $PGDUMP -U $pguser -w -p $SRC_PORT -s $BD | $GZIP - > $FILE
+				fi
 				ERROR=$?; if [ ! $ERROR -eq 0 ]; then echo "**** ERROR ****"; let ERRORES++; fi
 
   			echo
@@ -595,7 +610,14 @@ then
 
 					FILE="${FILE_ROOT}_${BD}.sql.gz"
 
-					$TIME su - postgres -c "export PGCLUSTER=$pgversion/$pgcluster; $PGDUMP -p $SRC_PORT $BD" | $GZIP - > $FILE
+					if [ -z $pguser ]
+					then
+						$TIME su - postgres -c "export PGCLUSTER=$pgversion/$pgcluster; $PGDUMP -p $SRC_PORT $BD" | $GZIP - > $FILE
+					else
+						export PGCLUSTER=$pgversion/$pgcluster
+						$TIME $PGDUMP -U $pguser -w -p $SRC_PORT $BD | $GZIP - > $FILE
+					fi
+
 					ERROR=$?; if [ ! $ERROR -eq 0 ]; then echo "**** ERROR ****"; let ERRORES++; fi
 
 					echo
@@ -618,8 +640,15 @@ then
 			      echo ">> "`date $DATE_FORMAT`
 
 						FILE="${FILE_ROOT}_${BD}_${TB}.sql.gz"
-						$TIME su - postgres -c "export PGCLUSTER=$pgversion/$pgcluster; $PGDUMP -p $SRC_PORT -t $TB $BD" | $GZIP - > $FILE
-			
+
+	          if [ -z $pguser ]
+  	        then
+							$TIME su - postgres -c "export PGCLUSTER=$pgversion/$pgcluster; $PGDUMP -p $SRC_PORT -t $TB $BD" | $GZIP - > $FILE
+      	    else
+        	    export PGCLUSTER=$pgversion/$pgcluster
+          	  $TIME $PGDUMP -U $pguser -w -p $SRC_PORT -t $TB $BD | $GZIP - > $FILE
+	          fi
+	
 						ERROR=$?; if [ ! $ERROR -eq 0 ]; then echo "**** ERROR ****"; let ERRORES++; fi
 
 					  echo
@@ -645,9 +674,17 @@ then
 			then
 				if [ "$pgversion" != "7.4" ] && [ "$pgversion" != "8.1" ]
 				then
+
 					FILE="${FILE_ROOT}_${BD}_meta.sql.gz"
-	
-					$TIME su - postgres -c "export PGCLUSTER=$pgversion/$pgcluster; $PGDUMPALL -p $SRC_PORT -g" | $GZIP - > $FILE
+
+	        if [ -z $pguser ]
+          then
+						$TIME su - postgres -c "export PGCLUSTER=$pgversion/$pgcluster; $PGDUMPALL -p $SRC_PORT -g" | $GZIP - > $FILE
+          else
+						export PGCLUSTER=$pgversion/$pgcluster
+						$TIME $PGDUMPALL -U $pguser -w -p $SRC_PORT -g | $GZIP - > $FILE
+					fi
+
 					ERROR=$?; if [ ! $ERROR -eq 0 ]; then echo "**** ERROR ****"; let ERRORES++; fi
 
   				echo
