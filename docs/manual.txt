@@ -198,7 +198,6 @@ Es posible forzar la fecha y hora de los nombres de los archivos de respaldo def
     export TB_DATE_FORMAT="+%Y.%m.%d_%H.%M.%S"
     export TB_FILES_DATE=$(date $TB_DATE_FORMAT)
 
-
 Para poder subir los archivos a una carpeta compartida por SAMBA (o Windows) se deben agregar los siguientes parametros al comando de respaldo:
 
 - Servidor SAMBA/Windows.
