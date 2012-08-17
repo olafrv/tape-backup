@@ -1,6 +1,6 @@
 ###
 # ARCHIVO
-#   manual.txt (21 de Junio de 2012)
+#   manual.txt (17 de Agosto de 2012)
 #
 # LICENCIA: 
 #   GNU GPL v3 o posterior (www.fsf.org).
@@ -186,6 +186,19 @@ Los modos (MODE) de copia de los archivos de respaldos del directorio donde se c
 - smb (Copia de archivos a un servidor SAMBA/Windows utilizando el comando smbclient.
 - tape (Copia de archivo a una cinta de respaldo magnetica en una unidad de cinta).
 
+Es posible forzar la fecha y hora de los nombres de los archivos de respaldo definiendo la siguiente variables antes de llamar a tape-backup:
+
+  TB_DATE_FORMAT: Permite especificar el formato de la fecha y hora como usualmente se hace con el comando "date" de bash.
+  TB_FILES_DATE:  Esta variable forzara la fecha y hora de los archivos de respaldo a la sucesivas llamadas al script de tape-backup.
+
+  Es importante que el contenido de estas variables no contengan espacios ni infrinjan las reglas de nombres de archivo POSIX.
+  
+  Por ejemplo:
+
+    export TB_DATE_FORMAT="+%Y.%m.%d_%H.%M.%S"
+    export TB_FILES_DATE=$(date $TB_DATE_FORMAT)
+
+
 Para poder subir los archivos a una carpeta compartida por SAMBA (o Windows) se deben agregar los siguientes parametros al comando de respaldo:
 
 - Servidor SAMBA/Windows.
@@ -256,6 +269,12 @@ Esto funcionará siempre y cuando:
 # USO:
 #   Ejemplo de un respaldo (Colocar en user-bin/).
 ##
+
+# Forzar la fecha de todos los archivos de respaldo (Opcional)
+# Es importante que el contenido de estas variables no contengan espacios
+# ni infrinjan las reglas de nombres de archivo POSIX.
+export TB_DATE_FORMAT="+%Y.%m.%d_%H.%M.%S"
+export TB_FILES_DATE=$(date $TB_DATE_FORMAT)
 
 # ATAJO AL COMANDO
 TB=/var/opt/tape-backup/bin/tape-backup.sh
