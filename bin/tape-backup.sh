@@ -2,7 +2,7 @@
 
 ###
 # ARCHIVO:
-#   tape-backup.sh (20 de Junio de 2012)
+#   tape-backup.sh (17 de Agosto de 2012)
 #
 # LICENCIA:
 #   GNU GPL v3 o posterior (www.fsf.org).
@@ -24,7 +24,7 @@
 ##
 
 # Version
-VERSION="20062012"
+VERSION="17082012"
 
 # Email del responsable de los respaldos
 # (Para que funcione debe tener instalado
@@ -93,6 +93,31 @@ fi
 # a menos que sepa lo que hace!!!
 ##
 
+function logf
+{
+	msg=$1
+	echo $(date $DATE_FORMAT)" - $msg"
+}
+
+function logfn
+{
+	msg=$1
+	echo -n $(date $DATE_FORMAT)" - $msg"
+}
+
+function logn
+{
+	msg=$1
+	echo -n "$msg"
+}
+
+function log
+{
+	msg=$1
+	echo "$msg"
+}
+
+
 ###
 # FUNCION:
 # ctl_cinta
@@ -117,12 +142,12 @@ function ctl_cinta
 	then
 		if [ `mt -f $DST_TAPE status | grep "ONLINE" | wc -l` -eq 0 ]
 		then
-			echo "clt_cinta: La unidad de cinta no esta encendida o disponible (ONLINE)."
-			echo "           Verifique que el cartucho este dentro de la unidad."
+			logfn "clt_cinta: La unidad de cinta no esta encendida o disponible (ONLINE)."
+			log "           Verifique que el cartucho este dentro de la unidad."
 			return 1
 		fi
 	else
-		echo "clt_cinta: La unidad de cinta $DST_TAPE no existe."
+		logf "clt_cinta: La unidad de cinta $DST_TAPE no existe."
 		return 1
 	fi
 
@@ -175,7 +200,7 @@ function ctl_cinta
 		mt -f $DST_TAPE fsf
 		return $?
 	else
-		echo "ctl_cinta: Comando $CMD desconocido."
+		logf "ctl_cinta: Comando $CMD desconocido."
 		return 1
 	fi
 }
@@ -183,13 +208,13 @@ function ctl_cinta
 function tamano
 {
   FILE="$1"
-	echo "***** Calculando tamaño del archivo '$FILE'."
- 	echo ">> "`date $DATE_FORMAT`
+	logf "Calculando tamano del archivo '$FILE'."
 	if [ -f "$FILE" ]
 	then
     du -h "$FILE"
   else
-		echo "El archivo '$FILE' no existe."	
+		logf "ERROR: El archivo '$FILE' no existe."	
+		let ERRORES++
 	fi
 }
 
@@ -197,16 +222,14 @@ function copiar
 {
 	if [ "$MODE" == "tape" ]
 	then
-		echo "***** Copiando (tape) archivo '$FILE' en cinta."
-  	echo ">> "`date $DATE_FORMAT`
+		logf "Copiando (tape) archivo '$FILE' en cinta."
     ctl_cinta $CMD $FILE
     return $?
 	fi
 
 	if [ "$MODE" == "cp" ]
 	then    
-		echo "***** Copiando (cp) archivo(s) '$FILE' al directorio '$CP_DIR'."
-		echo ">> "`date $DATE_FORMAT`
+		logf "Copiando (cp) archivo(s) '$FILE' al directorio '$CP_DIR'."
 		$TIME cp $FILE $CP_DIR/`basename $FILE`
 		return $?
 	fi
@@ -214,16 +237,14 @@ function copiar
  
 	if [ "$MODE" == "smb" ]
 	then
-		echo "***** Copiando (smb) archivos '$FILE' al servidor '$SMB_SERVER'."
-		echo ">> "`date $DATE_FORMAT`
+		logf "Copiando (smb) archivos '$FILE' al servidor '$SMB_SERVER'."
 		$TIME $SMBCLI //$SMB_SERVER/$SMB_RSRC $SMB_PASS -U $SMB_USER -W $SMB_WG -c "\"prompt; lcd ${TMP_DIR}; cd ${SMB_DIR}; put ${FILE}\""
 		return $?
 	fi
 
 	if [ "$MODE" == "scp" ]
 	then    
-		echo "***** Copiando (scp) archivo(s) '$FILE' al servidor '$SSH_SERVER' en la ruta '$SSH_DIR'."
-    echo ">> "`date $DATE_FORMAT`
+		logf "Copiando (scp) archivo(s) '$FILE' al servidor '$SSH_SERVER' en la ruta '$SSH_DIR'."
 		if [ -z "$SSH_USER" ]
 		then	
 			SSH_USER=`id -u -n`
@@ -246,72 +267,61 @@ exec 2>>$LOG_DIR/log.txt
 
 # Declaración de variables iniciales
 START=`date +%s`
-DATE_FORMAT="+%Y.%m.%d_%H.%M.%S"
-DST_FILES_ROOT=${DST_TAR_ROOT}"_"`date $DATE_FORMAT`
+if [ -z "$TB_DATE_FORMAT" ]
+then
+	DATE_FORMAT="+%Y.%m.%d_%H.%M.%S"
+else
+	DATE_FORMAT="$TB_DATE_FORMAT"
+fi
+if [ -z "$TB_FILES_DATE" ]
+then
+	DST_FILES_ROOT=${DST_TAR_ROOT}"_"`date $DATE_FORMAT`
+else
+	DST_FILES_ROOT=${DST_TAR_ROOT}"_"$TB_FILES_DATE
+fi
 ERRORES=0
 
 # Inicio de ejecucion (Verificación)
-echo
-echo "***** Inicio."
-echo ">> "`date $DATE_FORMAT`
-echo
+logf "Inicio."
 
-echo "***** Verificando si $TMP_DIR es una particion debe estar montada."
-echo ">> "`date $DATE_FORMAT`
-echo
+logf "Verificando si $TMP_DIR es una particion (montada)."
 if [ `cat /etc/fstab | grep $TMP_DIR | wc -l` -eq 1 ]
 then
 	if [ `mount | grep $TMP_DIR | wc -l` -eq 0 ]
 	then
-		echo "***** ERROR FATAL *****"
-		echo ">> "`date $DATE_FORMAT`
-		echo
+		logf "ERROR FATAL"
 		let ERRORES++
 	fi
 fi
 
-echo "***** Creando directorios $TMP_DIR/* para respaldos."
-echo ">> "`date $DATE_FORMAT`
-echo
+logf "Creando directorios $TMP_DIR/* para respaldos."
 mkdir -p $TMP_DIR
 if [ ! -d "$TMP_DIR" ]
 then
-	echo "***** ERROR FATAL *****"
-	echo ">> "`date $DATE_FORMAT`
-	echo
+	logf "ERROR FATAL"
 	let ERRORES++
 	exit 1
 fi
 
-echo "***** Creando el directorio de restauracion."
-echo ">> "`date $DATE_FORMAT`
-echo
+logf "Creando el directorio de restauracion."
 mkdir -p $REST_DIR
 if [ ! -d "$REST_DIR" ]
 then
-	echo "***** ERROR FATAL *****"
-	echo ">> "`date $DATE_FORMAT`
-	echo
+	logf "ERROR FATAL"
 	let ERRORES++
 	exit 1
 fi
 
-echo "***** Creando el directorio de logs"
-echo ">> "`date $DATE_FORMAT`
-echo
+logf "Creando el directorio de logs"
 mkdir -p $LOG_DIR
 if [ ! -d "$LOG_DIR" ]
 then
-	echo "***** ERROR FATAL *****"
-	echo ">> "`date $DATE_FORMAT`
-	echo
+	logf "ERROR FATAL"
 	let ERRORES++
 	exit 1
 fi
 
-echo "***** Verificando espacio disponible en disco"
-echo ">> "`date $DATE_FORMAT`
-echo
+logf "Verificando espacio disponible en disco"
 export PORCENTAJE=$PORCENTAJE
 if [ `df -P | grep "$TMP_PART$" | wc -l` -eq 1 ]
 then
@@ -319,15 +329,11 @@ then
 else
 	export PORCENTAJE_LIBRE=`df -P | grep "\/$" | awk '{print int($4*100/$2)}'`
 fi
-echo "% LIBRE     = $PORCENTAJE_LIBRE"
-echo "% REQUERIDO = $PORCENTAJE"
-echo
+logf "% LIBRE     = $PORCENTAJE_LIBRE"
+logf "% REQUERIDO = $PORCENTAJE"
 if [ `expr $PORCENTAJE_LIBRE \<= $PORCENTAJE` -eq 1 ]
 then
-	echo "***** ERROR *****"
-	echo "***** No hay espacio sufienciente en disco *****"
-	echo ">> "`date $DATE_FORMAT`
-	echo
+	logf "ERROR: No hay espacio sufienciente en disco"
 	let ERRORES++
 fi
 
@@ -353,22 +359,17 @@ then
 
 	CMD="$2"	
 
-	echo "***** Ejecutando ($2) operacion en la unidad de cinta."
-	echo ">> "`date $DATE_FORMAT`
+	logf "Ejecutando ($2) operacion en la unidad de cinta."
 
 	ctl_cinta "$CMD"
-	ERROR=$?; if [ ! $ERROR -eq 0 ]; then echo "**** ERROR ****"; let ERRORES++; fi
-
-	echo
+	ERROR=$?; if [ ! $ERROR -eq 0 ]; then logf "ERROR"; let ERRORES++; fi
 
 elif [ "$1" == "email" ]
 then
 
 	# Enviando por email el archivo de registro (log)
 
-	echo "***** Enviando correo electrónico."
-	echo ">> "`date $DATE_FORMAT`
-	echo
+	logf "***** Enviando correo electrónico."
 	if [ `more ${LOG_DIR}/log.txt | grep "ERROR" | wc -l` -eq 0 ]
 	then
 		msg="OK"
@@ -389,15 +390,11 @@ then
 
 	# Renombrando el archivo de registro (log)
 
-	echo "***** Renombrando archivo de registro."
-	echo ">> "`date $DATE_FORMAT`
-	echo
+	logf "***** Renombrando archivo de registro."
 	mv "$LOG_DIR/log.txt" ${LOG_DIR}"/"`date $DATE_FORMAT`".bak"
 
-	echo "***** Limpiando archivo de registro."
-	echo ">> "`date $DATE_FORMAT`
-	echo
-	echo "$LOG_DIR/log.txt"
+	logf "***** Limpiando archivo de registro."
+	logf "$LOG_DIR/log.txt"
 
 elif [ "$1" == "ldap" ]
 then
@@ -420,26 +417,19 @@ then
 	SSH_DIR=$4
 	SSH_USER=$5
 
-	echo "***** Comprimiendo el directorio LDAP."
-	echo ">> "`date $DATE_FORMAT`
+	logf "Comprimiendo el directorio LDAP."
 
 	FILE="${TMP_DIR}/${DST_FILES_ROOT}_${LABEL}.ldif.gz"
 
 	$TIME $SLAPCAT | $GZIP - > $FILE
-	ERROR=$?; if [ ! $ERROR -eq 0 ]; then echo "**** ERROR ****"; let ERRORES++; fi
+	ERROR=$?; if [ ! $ERROR -eq 0 ]; then logf "ERROR"; let ERRORES++; fi
 
-  echo
-	
 	tamano $FILE
 
-	echo
-
 	copiar
-	ERROR=$?; if [ ! $ERROR -eq 0 ]; then echo "**** ERROR ****"; let ERRORES++; fi
+	ERROR=$?; if [ ! $ERROR -eq 0 ]; then logf "ERROR"; let ERRORES++; fi
 
 	rm -f $FILE
-
-	echo
 
 elif [ "$1" == "files" ] || [ "$1" == "filesc" ]
 then
@@ -463,8 +453,7 @@ then
 	SSH_DIR=$5
 	SSH_USER=$6
 
-  echo "***** Comprimiendo en disco el(los) archivo(s) '$SRC_FILES_OR_DIRS'."
-	echo ">> "`date $DATE_FORMAT`
+  logf "Comprimiendo en disco el(los) archivo(s) '$SRC_FILES_OR_DIRS'."
 
 	FILE="${TMP_DIR}/${DST_FILES_ROOT}_${LABEL}.tar.gz"
 
@@ -475,20 +464,14 @@ then
 		$TIME $TAR cfz $FILE $SRC_FILES_OR_DIRS
 	fi
 
-  ERROR=$?; if [ ! $ERROR -eq 0 ]; then echo "**** ERROR ****"; let ERRORES++; fi
+  ERROR=$?; if [ ! $ERROR -eq 0 ]; then logf "ERROR"; let ERRORES++; fi
 
-  echo
-	
 	tamano $FILE
 
-	echo
-
 	copiar
-	ERROR=$?; if [ ! $ERROR -eq 0 ]; then echo "**** ERROR ****"; let ERRORES++; fi
+	ERROR=$?; if [ ! $ERROR -eq 0 ]; then logf "ERROR"; let ERRORES++; fi
 
 	rm -f $FILE
-
-	echo
 
 elif [ "$1" == "pgsql" ] || [ "$1" == "pgmeta" ] || [ "$1" == "pgsqlt" ]
 then
@@ -520,10 +503,8 @@ then
 	  pguser=`echo $SRC_CLUSTER|cut -d"/" -f3`
 		if [ ! -z $pguser ] && [ ! -e $PGPASSFILE ] && [ ! -e ~/.pgpass ]
 		then
-		  echo "***** Se ha especificado un usuario pero no existen los archivos "
-		  echo "***** definidos por la variable \$PGPASSFILE ni '~/.pgpass'."
-			echo ">> "`date $DATE_FORMAT`
-			echo "**** ERROR ****"; 
+		  logfn "ERROR: Se ha especificado un usuario pero no existen los archivos "
+		  logn "definidos por la variable \$PGPASSFILE ni '~/.pgpass'."
 			let ERRORES++;
 		fi
 	  SRC_PORT=`pg_lsclusters | grep "$pgversion" | grep "$pgcluster" | awk '{print $3}'`
@@ -531,9 +512,7 @@ then
 
 	FILE_ROOT="${TMP_DIR}/${DST_FILES_ROOT}_${LABEL}_${pgversion}_${pgcluster}"
 
-	echo "***** Exportando y comprimiendo las bases de datos del cluster $pgversion/$pgcluster."
-	echo ">> "`date $DATE_FORMAT`
-	echo
+	logf "Exportando y comprimiendo las bases de datos del cluster $pgversion/$pgcluster."
 
 	if [ "${SRC_BD:0:3}" == "all" ]
 	then
@@ -558,9 +537,7 @@ then
 		do
 			if [ "$BD" == "$BD_NO" ]
 			then
-				echo
-				echo "***** No se respalda la base de datos '$BD_NO' (Omision Explicita)."
-				echo ">> "`date $DATE_FORMAT`
+				logf "No se respalda la base de datos '$BD_NO' (Omision Explicita)."
 				OMITIR=1
 				break 
 			fi
@@ -574,10 +551,8 @@ then
 
 			if [ "$TBL" != "No relations found." ]
 			then 			  
- 
-				echo
-				echo "***** Exportando el esquema de la base de datos '$BD'."
-				echo ">> "`date $DATE_FORMAT`
+
+				logf "***** Exportando el esquema de la base de datos '$BD'."
 
 				FILE="${FILE_ROOT}_${BD}_pgschema.sql.gz"
 
@@ -588,22 +563,16 @@ then
 					export PGCLUSTER=$pgversion/$pgcluster
 					$TIME $PGDUMP -U $pguser -w -p $SRC_PORT -s $BD | $GZIP - > $FILE
 				fi
-				ERROR=$?; if [ ! $ERROR -eq 0 ]; then echo "**** ERROR ****"; let ERRORES++; fi
+				ERROR=$?; if [ ! $ERROR -eq 0 ]; then logf "ERROR"; let ERRORES++; fi
 
-  			echo
-	
 				tamano $FILE
 
-				echo
-                        
 				copiar
-				ERROR=$?; if [ ! $ERROR -eq 0 ]; then echo "**** ERROR ****"; let ERRORES++; fi
+				ERROR=$?; if [ ! $ERROR -eq 0 ]; then logf "ERROR"; let ERRORES++; fi
                           
 				rm -f $FILE
 
-				echo
-				echo "***** Exportando los registros de la base de datos '$BD'."
-				echo ">> "`date $DATE_FORMAT`
+				logf "***** Exportando los registros de la base de datos '$BD'."
 
 				if [ "$SRC_CMD" == "pgsql" ]
 				then
@@ -618,16 +587,12 @@ then
 						$TIME $PGDUMP -U $pguser -w -p $SRC_PORT $BD | $GZIP - > $FILE
 					fi
 
-					ERROR=$?; if [ ! $ERROR -eq 0 ]; then echo "**** ERROR ****"; let ERRORES++; fi
+					ERROR=$?; if [ ! $ERROR -eq 0 ]; then logf "ERROR"; let ERRORES++; fi
 
-					echo
-	
 					tamano $FILE
 
-					echo
-
 					copiar
-					ERROR=$?; if [ ! $ERROR -eq 0 ]; then echo "**** ERROR ****"; let ERRORES++; fi
+					ERROR=$?; if [ ! $ERROR -eq 0 ]; then logf "ERROR"; let ERRORES++; fi
 		
 					rm -f $FILE
 
@@ -635,9 +600,7 @@ then
 				then
 					for TB in $TBL
 			    do
-						echo
-						echo "***** Exportando la tabla '$TB' de la base de datos '$BD'."
-			      echo ">> "`date $DATE_FORMAT`
+						logf "Exportando la tabla '$TB' de la base de datos '$BD'."
 
 						FILE="${FILE_ROOT}_${BD}_${TB}.sql.gz"
 
@@ -649,25 +612,19 @@ then
           	  $TIME $PGDUMP -U $pguser -w -p $SRC_PORT -t $TB $BD | $GZIP - > $FILE
 	          fi
 	
-						ERROR=$?; if [ ! $ERROR -eq 0 ]; then echo "**** ERROR ****"; let ERRORES++; fi
+						ERROR=$?; if [ ! $ERROR -eq 0 ]; then logf "ERROR"; let ERRORES++; fi
 
-					  echo
-	
 						tamano $FILE
 
-						echo
-
 						copiar
-						ERROR=$?; if [ ! $ERROR -eq 0 ]; then echo "**** ERROR ****"; let ERRORES++; fi
+						ERROR=$?; if [ ! $ERROR -eq 0 ]; then logf "ERROR"; let ERRORES++; fi
 		
 						rm -f $FILE
 
 					done
 				fi
 			else
-				echo
-				echo "***** No hay tablas en las base de datos '$BD'."
-				echo ">> "`date $DATE_FORMAT`				
+				logf "***** No hay tablas en las base de datos '$BD'."
 			fi
 
 			if [ "$SRC_CMD" == "pgmeta" ]
@@ -685,29 +642,20 @@ then
 						$TIME $PGDUMPALL -U $pguser -w -p $SRC_PORT -g | $GZIP - > $FILE
 					fi
 
-					ERROR=$?; if [ ! $ERROR -eq 0 ]; then echo "**** ERROR ****"; let ERRORES++; fi
+					ERROR=$?; if [ ! $ERROR -eq 0 ]; then logf "ERROR"; let ERRORES++; fi
 
-  				echo
-		
 					tamano $FILE
 
-					echo
-
 					copiar
-					ERROR=$?; if [ ! $ERROR -eq 0 ]; then echo "**** ERROR ****"; let ERRORES++; fi
+					ERROR=$?; if [ ! $ERROR -eq 0 ]; then logf "ERROR"; let ERRORES++; fi
 					
 					rm -f $FILE
 				else
-					echo
-					echo "***** Imposible respaldar metadatos para las version 7.4 y 8.1 de PostgreSQL con pgdump(all)."
-          echo ">> "`date $DATE_FORMAT`
-					echo 
+					logf "ERROR: Imposible respaldar metadatos para las version 7.4 y 8.1 de PostgreSQL con pgdump(all)."
+					let ERRORES++
 				fi
 			fi
-
-			echo
-		 fi
-
+		fi
 	done
 
 elif [ "$1" == "mysql" ]
@@ -736,9 +684,7 @@ then
 	SSH_DIR="$9"
 	SSH_USER="${10}"
 
-	echo "***** Exportando y comprimiendo la(s) base(s) de datos al disco duro."
-	echo ">> "`date $DATE_FORMAT`
-	echo
+	logf " Exportando registros de base de datos al disco duro."
 
 	if [ "$SRC_BD" == "all" ]
 	then
@@ -749,23 +695,17 @@ then
 
 	for BD in $BD_LIST
 	do
-		echo
-		echo "***** Exportando la base de datos '$BD'."
-		echo ">> "`date $DATE_FORMAT`
+		logf "Exportando la base de datos '$BD'."
 
 		FILE="${TMP_DIR}/${DST_FILES_ROOT}_${LABEL}_${BD}.sql.gz"
 
 		$TIME $MYDUMP -R -u $SRC_USER --password=$SRC_PASS -h $SRC_HOST --protocol=TCP -P $SRC_PORT $BD | $GZIP - > $FILE
-		ERROR=$?; if [ ! $ERROR -eq 0 ]; then echo "**** ERROR ****"; let ERRORES++; fi
+		ERROR=$?; if [ ! $ERROR -eq 0 ]; then logf "ERROR"; let ERRORES++; fi
 
-	  echo
-	
 		tamano $FILE
 
-		echo
-
 		copiar
-		ERROR=$?; if [ ! $ERROR -eq 0 ]; then echo "**** ERROR ****"; let ERRORES++; fi
+		ERROR=$?; if [ ! $ERROR -eq 0 ]; then logf "ERROR"; let ERRORES++; fi
 
 		rm -f $FILE
 
@@ -773,34 +713,23 @@ then
 
 else
 
-	echo "***** ERROR: OPCION '$1' DESCONOCIDA."
-	echo ">> "`date $DATE_FORMAT`
-	echo
+	logf "ERROR: OPCION '$1' DESCONOCIDA."
 	let ERRORES++
 	exit 1
 
 fi
 
 
-echo "***** Imprimiendo fecha y hora de finalizacion."
-echo ">> "`date $DATE_FORMAT`
-echo
+logf "Imprimiendo fecha y hora de finalizacion."
 
 if [ ! $ERRORES -eq 0 ]
 then
-	echo "***************************"
-	echo "***************************"
-	echo "     HUBO $ERRORES ERROR(ES)  "
-	echo "***************************"
-	echo "***************************"
-	echo " >> "`date $DATE_FORMAT`
-	echo "***************************"
-	echo "***************************"
+	logf "*********************"
+	logf "ERRORES TOTALES: $ERRORES"
+	logf "*********************"
 fi
-echo
 
-echo "***** Imprimiento tiempo total de ejecucion."
-echo -n ">> "
+logf "Imprimiento tiempo total de ejecucion."
 
 FINISH=`date +%s`
 DIFF=`expr $FINISH - $START`
@@ -808,9 +737,10 @@ HRS=`expr $DIFF / 3600`
 MIN=`expr $DIFF % 3600 / 60`
 SEC=`expr $DIFF % 3600 % 60`
 
-echo -n "$HRS hora(s). "
-echo -n "$MIN minuto(s). "
-echo "$SEC segundo(s)."
-echo
+logfn -n "$HRS hora(s). "
+logn -n "$MIN minuto(s). "
+log "$SEC segundo(s)."
+logf "Fin."
+log
 
 ######################## o ###############################
