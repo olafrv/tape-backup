@@ -2,7 +2,7 @@
 
 ###
 # ARCHIVO:
-#   tape-backup.sh (17 de Agosto de 2012)
+#   tape-backup.sh (18 de Agosto de 2012)
 #
 # LICENCIA:
 #   GNU GPL v3 o posterior (www.fsf.org).
@@ -24,7 +24,7 @@
 ##
 
 # Version
-VERSION="17082012"
+VERSION="18082012"
 
 # Email del responsable de los respaldos
 # (Para que funcione debe tener instalado
