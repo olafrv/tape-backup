@@ -737,8 +737,8 @@ HRS=`expr $DIFF / 3600`
 MIN=`expr $DIFF % 3600 / 60`
 SEC=`expr $DIFF % 3600 % 60`
 
-logfn -n "$HRS hora(s). "
-logn -n "$MIN minuto(s). "
+logfn "$HRS hora(s). "
+logn "$MIN minuto(s). "
 log "$SEC segundo(s)."
 logf "Fin."
 log
