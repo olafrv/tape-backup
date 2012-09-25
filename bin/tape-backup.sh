@@ -2,7 +2,7 @@
 
 ###
 # ARCHIVO:
-#   tape-backup.sh (18 de Agosto de 2012)
+#   tape-backup.sh 
 #
 # LICENCIA:
 #   GNU GPL v3 o posterior (www.fsf.org).
@@ -24,7 +24,7 @@
 ##
 
 # Version
-VERSION="18082012"
+VERSION="24092012"
 
 # Email del responsable de los respaldos
 # (Para que funcione debe tener instalado
@@ -244,12 +244,12 @@ function copiar
 
 	if [ "$MODE" == "scp" ]
 	then    
-		logf "Copiando (scp) archivo(s) '$FILE' al servidor '$SSH_SERVER' en la ruta '$SSH_DIR'."
-		if [ -z "$SSH_USER" ]
+		if [ -z "$TB_SSH_USER" ]
 		then	
-			SSH_USER=`id -u -n`
+			TB_SSH_USER=`id -u -n`
 		fi
-		$TIME $SCP -q $FILE $SSH_USER@$SSH_SERVER:$SSH_DIR 2>&1 > /dev/null
+		logf "Copiando (scp) archivo(s) '$FILE' como el usuario '$TB_SSH_USER' al servidor '$SSH_SERVER' en la ruta '$SSH_DIR'."
+		$TIME $SCP -q $FILE $TB_SSH_USER@$SSH_SERVER:$SSH_DIR 2>&1 > /dev/null
 		return $?
 	fi
 }

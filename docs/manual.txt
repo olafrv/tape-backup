@@ -274,11 +274,13 @@ Esto funcionará siempre y cuando:
 # ni infrinjan las reglas de nombres de archivo POSIX.
 export TB_DATE_FORMAT="+%Y.%m.%d_%H.%M.%S"
 export TB_FILES_DATE=$(date $TB_DATE_FORMAT)
+export TB_SSH_USER=another
 
 # ATAJO AL COMANDO
 TB=/var/opt/tape-backup/bin/tape-backup.sh
 
 # MODO DE COPIA DE ARCHIVOS (tape, scp (Por defecto), smb, cp)
+# Si utiliza "scp" no olvide leer la sección "SSH sin contraseña".
 MODE=tape
 
 # IMPRIMIR ESTADO DE LA CINTA (Opcional)
@@ -354,7 +356,9 @@ $TB renlog
 
 SSH sin contraseña = Conexión con llaves públicas de tipo RSA. 
 
-ADVERTENCIA: Todos los comandos deben ser ejecutados como el que ejecuta tape-backup.
+ADVERTENCIA: Todos los comandos deben ser ejecutados como el que ejecuta tape-backup,
+a traves de la variable TB_SSH_USER se puede especificar otro usuario para copiar
+los respaldos via SSH (scp) a otro servidor.
 
 En el cliente donde se ejecuta tape-backup:
 

@@ -19,6 +19,11 @@
 
 Última versión:
 
+   - Modificado el 24 de Septiembre de 2012 por Olaf Reitmaier (olafr@gmail.com).
+     Revisada y corregida funcionalidad de copia de respaldos via SSH (scp) 
+     con un usuario diferente al usuario con que se ejecutan las tareas de
+     respaldos, protección del superusuario "root" comúnmente usado.
+
    - Modificado el 21 de Junio de 2012 por Olaf Reitmaier (olafr@gmail.com).
      Agregada funcionado de respaldos de bases de datos PostgreSQL como
      un usuarios distinto de "postgres".
