@@ -1,6 +1,6 @@
 ###
 # ARCHIVO
-#   manual.txt (17 de Agosto de 2012)
+#   manual.txt 
 #
 # LICENCIA: 
 #   GNU GPL v3 o posterior (www.fsf.org).
