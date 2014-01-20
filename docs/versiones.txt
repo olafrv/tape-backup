@@ -19,6 +19,10 @@
 
 Última versión:
 
+	 - Modificado el 20 de Enero de 2014 por Olaf Reitmaier (olafrv@gmail.com).
+     Corregido algoritmo de calculo del espacio libre en la particion temporal
+     (/var?) cuando no existe un punto de montaje separado para la misma.
+
    - Modificado el 24 de Septiembre de 2012 por Olaf Reitmaier (olafr@gmail.com).
      Revisada y corregida funcionalidad de copia de respaldos via SSH (scp) 
      con un usuario diferente al usuario con que se ejecutan las tareas de

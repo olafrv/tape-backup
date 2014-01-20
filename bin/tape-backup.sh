@@ -24,7 +24,7 @@
 ##
 
 # Version
-VERSION="24092012"
+VERSION="20012014"
 
 # Email del responsable de los respaldos
 # (Para que funcione debe tener instalado
@@ -323,12 +323,7 @@ fi
 
 logf "Verificando espacio disponible en disco"
 export PORCENTAJE=$PORCENTAJE
-if [ `df -P | grep "$TMP_PART$" | wc -l` -eq 1 ]
-then
-	export PORCENTAJE_LIBRE=`df -P | grep "$TMP_PART$" | awk '{print int($4*100/$2)}'`
-else
-	export PORCENTAJE_LIBRE=`df -P | grep "\/$" | awk '{print int($4*100/$2)}'`
-fi
+export PORCENTAJE_LIBRE=`df -P "$TMP_PART" | tail -n +2 | awk '{print int($4*100/$2)}'`
 logf "% LIBRE     = $PORCENTAJE_LIBRE"
 logf "% REQUERIDO = $PORCENTAJE"
 if [ `expr $PORCENTAJE_LIBRE \<= $PORCENTAJE` -eq 1 ]
